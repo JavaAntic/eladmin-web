@@ -18,7 +18,6 @@ export function getupload(data) {
     file: data.file,
     isModel: false
   }
-  console.log(data)
   return request({
     url: 'api/document',
     method: 'post',

@@ -21,7 +21,7 @@
           size="small"
           label-width="66px"
         >
-          <el-form-item label="文件000编号" prop="username">
+          <el-form-item label="文件编号" prop="username">
             <el-input v-model="form.username" />
           </el-form-item>
           <el-form-item label="文件名称" prop="phone">
@@ -51,11 +51,11 @@
         @selection-change="crud.selectionChangeHandler"
       >
         <el-table-column :selectable="checkboxT" type="selection" width="55" />
-        <el-table-column :show-overflow-tooltip="true" prop="username" label="文件编号" />
-        <el-table-column :show-overflow-tooltip="true" prop="nickName" label="文件名称" />
-        <el-table-column prop="gender" label="文件类型" />
-        <el-table-column :show-overflow-tooltip="true" prop="phone" width="100" label="创建人" />
-        <el-table-column :show-overflow-tooltip="true" prop="createTime" width="135" label="创建时间" />
+        <el-table-column :show-overflow-tooltip="true" prop="docNum" label="文件编号" />
+        <el-table-column :show-overflow-tooltip="true" prop="fileName" label="文件名称" />
+        <el-table-column prop="fileType" label="文件类型" />
+        <el-table-column :show-overflow-tooltip="true" prop="updateBy" width="100" label="创建人" />
+        <el-table-column :show-overflow-tooltip="true" prop="updateTime" width="135" label="创建时间" />
         <!-- <el-table-column :show-overflow-tooltip="true" prop="dept" label="部门">
           <template slot-scope="scope">
             <div>{{ scope.row.dept.name }}</div>
@@ -96,7 +96,7 @@
 </template>
 
 <script>
-import crudUser from '@/api/system/user'
+import { getaxios } from '@/api/system/document'
 import { isvalidPhone } from '@/utils/validate'
 import { getDepts, getDeptSuperior } from '@/api/system/dept'
 import { getAll, getLevel } from '@/api/system/role'
@@ -138,8 +138,8 @@ export default {
   cruds() {
     return CRUD({
       title: '用户',
-      url: 'api/users',
-      crudMethod: { ...crudUser }
+      url: 'api/document',
+      crudMethod: { ...getaxios }
     })
   },
   mixins: [presenter(), header(), form(defaultForm), crud()],
@@ -377,8 +377,8 @@ export default {
         }
       )
         .then(() => {
-          crudUser
-            .edit(data)
+          getaxios
+            .getdocument(data)
             .then(res => {
               this.crud.notify(
                 this.dict.label.user_status[val] + '成功',

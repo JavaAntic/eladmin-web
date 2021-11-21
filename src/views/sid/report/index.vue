@@ -32,9 +32,9 @@
         width="500px"
       >
         <el-form ref="form" :model="form" size="small" label-width="80px">
-          <!-- <el-form-item label="文件名">
-            <el-input v-model="form.name" style="width: 370px;" />
-          </el-form-item>-->
+          <el-form-item label="文件名">
+            <el-input v-model="filename" style="width: 370px;" />
+          </el-form-item>
           <!--   上传文件   -->
           <el-form-item v-if="crud.status.add" label="上传">
             <el-upload
@@ -45,7 +45,8 @@
               :headers="headers"
               :on-success="handleSuccess"
               :on-error="handleError"
-              :action="fileUploadApi + '?name=' + form.name"
+              :on-change="onchange"
+              :http-request="httpupload"
             >
               <div class="eladmin-upload">
                 <i class="el-icon-upload" /> 添加文件
@@ -69,11 +70,11 @@
         @selection-change="crud.selectionChangeHandler"
       >
         <el-table-column :selectable="checkboxT" type="selection" width="55" />
-        <el-table-column :show-overflow-tooltip="true" prop="username" label="文件编号" />
-        <el-table-column :show-overflow-tooltip="true" prop="nickName" label="文件名称" />
-        <el-table-column prop="gender" label="文件类型" />
-        <el-table-column :show-overflow-tooltip="true" prop="phone" width="100" label="创建人" />
-        <el-table-column :show-overflow-tooltip="true" prop="createTime" width="135" label="创建时间" />
+        <el-table-column :show-overflow-tooltip="true" prop="docNum" label="文件编号" />
+        <el-table-column :show-overflow-tooltip="true" prop="fileName" label="文件名称" />
+        <el-table-column prop="fileType" label="文件类型" />
+        <el-table-column :show-overflow-tooltip="true" prop="updateBy" width="100" label="创建人" />
+        <el-table-column :show-overflow-tooltip="true" prop="updateTime" width="135" label="创建时间" />
         <!-- <el-table-column :show-overflow-tooltip="true" prop="dept" label="部门">
           <template slot-scope="scope">
             <div>{{ scope.row.dept.name }}</div>
@@ -115,7 +116,9 @@
 
 <script>
 import { getaxios } from '@/api/system/document'
-import { isvalidPhone } from '@/utils/validate'
+import { getupload } from '@/api/system/document'
+import { getToken } from '@/utils/auth'
+// import { isvalidPhone } from "@/utils/validate";
 // import { getDepts, getDeptSuperior } from "@/api/system/dept";
 // import { getAll, getLevel } from "@/api/system/role";
 // import { getAllJob } from "@/api/system/job";
@@ -163,17 +166,11 @@ export default {
 
   data() {
     // 自定义验证
-    const validPhone = (rule, value, callback) => {
-      if (!value) {
-        callback(new Error('请输入电话号码'))
-      } else if (!isvalidPhone(value)) {
-        callback(new Error('请输入正确的11位手机号码'))
-      } else {
-        callback()
-      }
-    }
     return {
+      headers: { 'Content-Type': 'multipart/form-data', 'Authorization': getToken() },
+      file: '',
       //   height: document.documentElement.clientHeight - 180 + "px;",
+      filename: '',
       deptName: '',
       depts: [],
       deptDatas: [],
@@ -188,6 +185,7 @@ export default {
         edit: ['admin', 'user:edit'],
         del: ['admin', 'user:del'],
         getdocument: ['admin', 'user:getdocument']
+
       },
       //   enabledTypeOptions: [
       //     { key: "true", display_name: "激活" },
@@ -205,8 +203,8 @@ export default {
         email: [
           { required: true, message: '请输入邮箱地址', trigger: 'blur' },
           { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
-        ],
-        phone: [{ required: true, trigger: 'blur', validator: validPhone }]
+        ]
+        // phone: [{ required: true, trigger: "blur", validator: validPhone }]
       }
     }
   },
@@ -214,7 +212,9 @@ export default {
     ...mapGetters(['user'])
   },
   created() {
+    console.log(getupload)
     this.crud.msg.add = '新增成功，默认密码：123456'
+    console.log(getaxios, 1111)
   },
   mounted: function() {},
   methods: {
@@ -222,29 +222,63 @@ export default {
     merge() {
       alert('成功')
       this.$router.push({ name: 'marge' })
-      // window.open( http://localhost:8013/sid/marge/index)
     },
-    changeRole(value) {
-      userRoles = []
-      value.forEach(function(data, index) {
-        const role = { id: data }
-        userRoles.push(role)
+
+    upload() {
+      this.$refs.upload.submit()
+    },
+    // uploading(event, file, fileList){
+    //   console.log(event)
+    //   console.log(file)
+    //   console.log(fileList)
+    // },
+    onchange(file, fileList) {
+      this.file = file
+      console.log(file)
+      console.log(fileList)
+    },
+    beforeUpload(file) {
+      console.log(file.name)
+      console.log(this.form.name)
+      let isLt2M = true
+      isLt2M = file.size / 1024 / 1024 < 100
+      if (!isLt2M) {
+        this.loading = false
+        this.$message.error('上传文件大小不能超过 100MB!')
+      }
+      this.filename = file.name
+      console.log(this.form.name)
+      return isLt2M
+    },
+    httpupload() {
+      console.log(111)
+      const datas = {
+        filename: this.filename,
+        file: this.file
+      }
+      console.log(datas)
+      getupload(datas)
+    },
+    handleSuccess(response, file, fileList) {
+      console.log(222)
+      httpupload()
+      this.crud.notify('上传成功', CRUD.NOTIFICATION_TYPE.SUCCESS)
+      this.$refs.upload.clearFiles()
+      this.crud.status.add = CRUD.STATUS.NORMAL
+      this.crud.resetForm()
+      this.crud.toQuery()
+    },
+    // 监听上传失败
+    handleError(e, file, fileList) {
+      const msg = JSON.parse(e.message)
+      this.$notify({
+        title: msg.message,
+        type: 'error',
+        duration: 2500
       })
+      this.loading = false
     },
-    changeJob(value) {
-      userJobs = []
-      value.forEach(function(data, index) {
-        const job = { id: data }
-        userJobs.push(job)
-      })
-    },
-    deleteTag(value) {
-      userRoles.forEach(function(data, index) {
-        if (data.id === value) {
-          userRoles.splice(index, value)
-        }
-      })
-    },
+
     // 新增与编辑前做的操作
     [CRUD.HOOK.afterToCU](crud, form) {
       this.getRoles()
@@ -394,15 +428,13 @@ export default {
           type: 'warning'
         }
       ).then(() => {
-        getaxios
-          .getdocument(data)
-          .then(res => {
-            console.log(res, 'getdocument')
-            this.crud.notify(
-              this.dict.label.user_status[val] + '成功',
-              CRUD.NOTIFICATION_TYPE.SUCCESS
-            )
-          })
+        getaxios.getdocument(data).then(res => {
+          console.log(res, 'getdocument')
+          this.crud.notify(
+            this.dict.label.user_status[val] + '成功',
+            CRUD.NOTIFICATION_TYPE.SUCCESS
+          )
+        })
           .catch(err => {
             data.enabled = !data.enabled
             console.log(err, 'getdocument')

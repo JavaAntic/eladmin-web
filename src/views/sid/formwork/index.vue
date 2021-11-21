@@ -64,11 +64,11 @@
         @selection-change="crud.selectionChangeHandler"
       >
         <el-table-column :selectable="checkboxT" type="selection" width="55" />
-        <el-table-column :show-overflow-tooltip="true" prop="username" label="模板编号" />
-        <el-table-column :show-overflow-tooltip="true" prop="nickName" label="模板名称" />
-        <el-table-column prop="gender" label="文件类型" />
-        <el-table-column :show-overflow-tooltip="true" prop="phone" width="70" label="创建人" />
-        <el-table-column :show-overflow-tooltip="true" width="135" prop="email" label="创建时间" />
+        <el-table-column :show-overflow-tooltip="true" prop="docNum" label="模板编号" />
+        <el-table-column :show-overflow-tooltip="true" prop="fileName" label="模板名称" />
+        <el-table-column prop="fileType" label="文件类型" />
+        <el-table-column :show-overflow-tooltip="true" prop="updateBy" width="70" label="创建人" />
+        <el-table-column :show-overflow-tooltip="true" width="135" prop="updateTime" label="创建时间" />
         <!-- <el-table-column :show-overflow-tooltip="true" prop="dept" label="部门">
           <template slot-scope="scope">
             <div>{{ scope.row.dept.name }}</div>
@@ -151,9 +151,9 @@ export default {
   cruds() {
     return CRUD({
       title: '安全',
-      url: 'api/document/documentList',
+      url: 'api/document',
       params: {
-        docType: '3'
+        docType: '2'
       },
       crudMethod: { ...getaxios }
     })
