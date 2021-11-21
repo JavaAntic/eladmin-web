@@ -21,7 +21,7 @@
           size="small"
           label-width="66px"
         >
-          <el-form-item label="文件编号" prop="username">
+          <el-form-item label="文件000编号" prop="username">
             <el-input v-model="form.username" />
           </el-form-item>
           <el-form-item label="文件名称" prop="phone">
